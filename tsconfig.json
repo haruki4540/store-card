@@ -1,12 +1,13 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true,
+    "moduleResolution": "bundler", // ← これが重要！
+    "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ]
-    }
+      "@/*": ["./src/*"]
+    },
+    "strict": true,
+    "skipLibCheck": true
   },
   "include": [
     "**/*.ts",
