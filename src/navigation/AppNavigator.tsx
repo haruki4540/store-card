@@ -5,9 +5,9 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-// 各画面コンポーネントをインポート
-import HomeScreen from '../screens/HomeScreen';
-import MemberCardScreen from '../screens/MemberCardScreen';
+// 各画面コンポーネントをインポート（後で作成）
+import HomeScreen from '@/screens/HomeScreen';
+import MemberCardScreen from '@/screens/MemberCardScreen';
 
 // 画面ごとのパラメータ型を定義（現時点ではパラメータ無し）
 // この型はナビゲーション時の型安全性を保証するために使用
