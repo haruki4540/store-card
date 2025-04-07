@@ -1,9 +1,10 @@
-// AppNavigator.tsx
+// src/navigation/AppNavigator.tsx
 // React Navigation によるスタックナビゲーション設定ファイル
 // アプリ内の画面遷移（ホーム → 会員証）を管理する
 
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import LoginScreen from '@/screens/LoginScreen';
 
 // 各画面コンポーネントをインポート（後で作成）
 import HomeScreen from '@/screens/HomeScreen';
@@ -12,6 +13,7 @@ import MemberCardScreen from '@/screens/MemberCardScreen';
 // 画面ごとのパラメータ型を定義（現時点ではパラメータ無し）
 // この型はナビゲーション時の型安全性を保証するために使用
 export type RootStackParamList = {
+  Login: undefined;
   Home: undefined;
   MemberCard: undefined;
 };
@@ -31,6 +33,12 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function AppNavigator() {
   return (
     <Stack.Navigator>
+      {/* ログイン画面： ユーザーがメールアドレスとパスワードを入力する承認画面 */}
+      <Stack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{ title: 'ログイン'}}
+      />
       {/* ホーム画面：アプリ起動時に表示されるトップ画面 */}
       <Stack.Screen 
         name="Home" 
