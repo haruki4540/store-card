@@ -2,14 +2,11 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// 認証トークンを保存する際のキー
 const TOKEN_KEY = 'auth_token';
 
 /**
  * saveToken
- * サーバーから受け取った認証トークンを AsyncStorage に保存する関数
- *
- * @param token - 保存するトークン文字列
+ * サーバーから受け取った認証トークンを保存する
  */
 export const saveToken = async (token: string) => {
   try {
@@ -21,9 +18,7 @@ export const saveToken = async (token: string) => {
 
 /**
  * getToken
- * AsyncStorage から認証トークンを取得する関数
- *
- * @returns Promise<string | null> - トークンが存在すれば文字列、存在しなければ null
+ * 保存された認証トークンを取得する
  */
 export const getToken = async (): Promise<string | null> => {
   try {
@@ -36,7 +31,7 @@ export const getToken = async (): Promise<string | null> => {
 
 /**
  * removeToken
- * ログアウト時などに、AsyncStorage から認証トークンを削除する関数
+ * ログアウト時に認証トークンを削除する
  */
 export const removeToken = async () => {
   try {

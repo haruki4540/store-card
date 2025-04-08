@@ -2,21 +2,19 @@
 
 import React from 'react';
 import AppNavigator from './src/navigation/AppNavigator';
-// AuthProvider をインポートし、アプリ全体の認証状態管理に使用する
 import { AuthProvider } from './src/contexts/AuthContext';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 /**
  * App コンポーネント
- *
- * アプリ全体の最上位コンポーネント。AuthProvider でラップすることで、
- * グローバルな認証状態が全コンポーネントで共有される。
- *
- * @returns React.ReactElement
+ * SafeAreaProvider と AuthProvider により全体の安全領域およびグローバル認証状態を提供する
  */
 export default function App() {
   return (
-    <AuthProvider>
-      <AppNavigator />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <AppNavigator />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
