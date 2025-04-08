@@ -1,19 +1,14 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "moduleResolution": "bundler", // ← これが重要！
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
-    "strict": true,
+    "moduleResolution": "bundler",  // Expo プロジェクトでは bundler を推奨する場合もあります
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
     },
+    "strict": true,
     "allowImportingTsExtensions": true,
-    "module": "esnext",
-    "moduleResolution": "node"
+    "module": "esnext"
   },
   "include": [
     "**/*.ts",

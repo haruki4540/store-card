@@ -1,57 +1,80 @@
 // src/navigation/AppNavigator.tsx
 // React Navigation によるスタックナビゲーション設定ファイル
 // アプリ内の画面遷移（ホーム → 会員証）を管理する
+// ログイン状態によってルートを切り替える（認証ガード）
 
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import LoginScreen from '@/screens/LoginScreen';
+import { ActivityIndicator, View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
 
-// 各画面コンポーネントをインポート（後で作成）
+// 各画面コンポーネントをインポート
+import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '@/screens/HomeScreen';
 import MemberCardScreen from '@/screens/MemberCardScreen';
 
-// 画面ごとのパラメータ型を定義（現時点ではパラメータ無し）
-// この型はナビゲーション時の型安全性を保証するために使用
+// グローバルな認証状態管理用のフックを AuthContext からインポート
+import { useAuth } from '@/contexts/AuthContext';
+
+// ナビゲーションパラメータの型定義
 export type RootStackParamList = {
   Login: undefined;
   Home: undefined;
   MemberCard: undefined;
 };
 
-// 型付きのスタックナビゲーターを作成
+// Stack ナビゲーターインスタンス
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+/**
+ * 認証済みユーザー用のナビゲーター
+ * Home, MemberCard 画面を含む
+ */
+function AuthenticatedStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'ホーム'}} />
+      <Stack.Screen name="MemberCard" component={MemberCardScreen} options={{ title: '会員証' }} />
+    </Stack.Navigator>
+  );
+}
+
+/**
+ * 未認証ユーザー用のナビゲーター
+ * Login 画面のみ含む
+ */
+function UnauthenticatedStack() {
+    return (
+      <Stack.Navigator>
+        <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'ログイン' }} />
+      </Stack.Navigator>
+    );
+}
 
 /**
  * AppNavigator コンポーネント
  * 
- * アプリ全体の画面遷移構成を提供する。
- * - `Home`: ホーム画面（初期表示）
- * - `MemberCard`: 会員証表示用の画面（QRコードなど）
+ * ログイン状態に応じて表示するスタックナビゲーターを切り替える。
+ * - トークンが存在すれば認証済みナビゲーターを表示
+ * - トークンが無ければログイン画面へ
  * 
  * @returns React要素（Stack.Navigator）
  */
 export default function AppNavigator() {
-  return (
-    <Stack.Navigator>
-      {/* ログイン画面： ユーザーがメールアドレスとパスワードを入力する承認画面 */}
-      <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-        options={{ title: 'ログイン'}}
-      />
-      {/* ホーム画面：アプリ起動時に表示されるトップ画面 */}
-      <Stack.Screen 
-        name="Home" 
-        component={HomeScreen} 
-        options={{ title: 'ホーム' }} 
-      />
+  const { token, loading } = useAuth();
 
-      {/* 会員証画面：QRコードなどを表示する画面 */}
-      <Stack.Screen 
-        name="MemberCard" 
-        component={MemberCardScreen} 
-        options={{ title: '会員証' }} 
-      />
-    </Stack.Navigator>
+  // トークンのチェック中はローディングスピナーを表示
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      {token ? <AuthenticatedStack /> : <UnauthenticatedStack />}
+    </NavigationContainer>
   );
 }

@@ -1,26 +1,59 @@
-import { loginApi } from '@/api/auth'; // 追加：ログインAPI呼び出し関数
+// src/api/auth.ts
 
-// ログインボタン押下時の処理関数
-const handleLogin = async () => {
-  // 入力チェック：どちらかが空欄なら処理中断
-  if (!id || !password) {
-    Alert.alert('エラー', 'IDとパスワードを入力してください');
-    return;
+import Constants from "expo-constants";
+import { TEST_USERS } from "@/constants/testUsers";
+
+/**
+ * 認証用API
+ * 
+ * 指定されたメールアドレスとパスワードを使用してログイン処理を行う。
+ * 成功時にはトークンを返却し、失敗時は例外をスローする。
+ * 
+ * @param email - ユーザーのメールアドレス
+ * @param password - パスワード
+ * @returns Promise<{ token: string }> - 成功時のJWTトークンを含むレスポンス
+ */
+export async function loginApi(email: string, password: string): Promise<{ token: string }> {
+  // Expo/React Native 環境であれば __DEV__ によって開発環境が判定される
+  const isDev = __DEV__;
+  // API_URL の設定。expoConfig の extra に apiUrl が設定されていなければデフォルトのURLを使用する
+  const API_URL = Constants.expoConfig?.extra?.apiUrl || "https://your-api-endpoint.com";
+
+  // 開発環境の場合はモックデータで認証チェックを行う
+  if (isDev) {
+    // TEST_USERS 配列から該当するユーザーを検索
+    const user = TEST_USERS.find(
+      (u) => u.email === email && u.password === password
+    );
+    // 該当ユーザーが見つからなければエラーをスロー
+    if (!user) {
+      throw new Error("メールアドレスまたはパスワードが正しくありません");
+    }
+    // 見つかった場合はモックのトークンを返す
+    return Promise.resolve({ token: "mock-token-for-testing" });
   }
 
+  // 本番環境でのAPI通信を行う
   try {
-    setLoading(true); // ボタン連打防止 & UIフィードバック用ローディング開始
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      // リクエストボディにメールアドレスとパスワードをJSONで送信
+      body: JSON.stringify({ email, password }),
+    });
 
-    // API呼び出し（成功すればトークンが返却される）
-    const result = await loginApi(id, password);
-    console.log('ログイン成功:', result);
+    // HTTPステータスが OK でない場合、エラーデータを取得しエラーをスローする
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "ログインに失敗しました");
+    }
 
-    // TODO: トークン保存やホーム画面への遷移をここに追加予定
-
+    // 正常時はレスポンスのJSONを返却する（トークンを含む）
+    return await response.json();
   } catch (error) {
-    // エラー表示（APIからのエラー or 通信エラー）
-    Alert.alert('ログイン失敗', 'IDまたはパスワードが間違っています');
-  } finally {
-    setLoading(false); // ローディング終了
+    console.error("API通信エラー:", error);
+    throw error;
   }
-};
+}

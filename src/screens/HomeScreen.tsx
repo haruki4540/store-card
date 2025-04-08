@@ -1,45 +1,49 @@
-// HomeScreen.tsx
-// ホーム画面（アプリ起動時に表示されるトップページ）
+// src/screens/HomeScreen.tsx
 
 import React from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '@/navigation/AppNavigator';
+// removeToken を使用してトークン削除（ログアウト処理用）
+import { removeToken } from '@/utils/authToken';
+// AuthContext 経由の useAuth フックをインポートして認証状態にアクセス
+import { useAuth } from '@/contexts/AuthContext';
 
 /**
- * HomeScreen Props の型
- * - navigation: 画面遷移用の関数群
+ * HomeScreen
+ * ログイン後に表示されるホーム画面。
+ * ログアウトボタンを押すとトークンが削除され、認証状態が更新される。
  */
-type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
+export default function HomeScreen() {
+  const { refetchToken } = useAuth();
 
-/**
- * HomeScreen コンポーネント
- * - トップページとして表示される画面
- * - 会員証画面への遷移ボタンを持つ
- */
-export default function HomeScreen({ navigation }: Props) {
+  /**
+   * handleLogout
+   * ログアウト処理：AsyncStorage からトークンを削除し、認証状態を再取得する
+   */
+  const handleLogout = async () => {
+    await removeToken();       // 認証トークンを削除
+    await refetchToken();      // 認証状態を再評価
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>ホーム画面</Text>
       <Button
-        title="会員証を表示"
-        onPress={() => navigation.navigate('MemberCard')}
+        title="ログアウト"
+        onPress={handleLogout}
       />
     </View>
   );
 }
 
-// スタイル定義
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#fff',
   },
   title: {
     fontSize: 24,
-    marginBottom: 16,
+    marginBottom: 20,
   },
 });
