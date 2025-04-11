@@ -23,6 +23,12 @@
     },
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "apiUrl": "http://192.168.2.231:3000",
+      "eas": {
+        "projectId": "bd6660b0-0e1b-485b-84d8-3a72ec20071a"
+      }
     }
   }
 }

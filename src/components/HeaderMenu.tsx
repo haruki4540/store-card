@@ -28,6 +28,6 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   text: {
-    fontSize: 24,
+    fontSize: 40,
   },
 });

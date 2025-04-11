@@ -5,6 +5,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { useAuth } from '@/contexts/AuthContext';
 import { removeToken } from '@/utils/authToken';
+import { removeUser } from '@/utils/userStorage';
 
 /**
  * CustomDrawerContent コンポーネント
@@ -19,7 +20,9 @@ export default function CustomDrawerContent(props: any) {
   const handleLogout = async () => {
     try {
       await removeToken();
+      await removeUser();
       await refetchToken();
+      
       // 必要に応じてメッセージ表示など
     } catch (error) {
       console.error("ログアウトエラー", error);

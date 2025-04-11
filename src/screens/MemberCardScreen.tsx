@@ -1,33 +1,135 @@
 // src/screens/MemberCardScreen.tsx
 
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import QRCode from 'react-native-qrcode-svg';
+import { useNavigation } from '@react-navigation/native';
 
-/**
- * MemberCardScreen
- * 会員証画面。ログイン済みの場合に会員証情報を表示し、未ログインの場合はログインを促す。
- */
 export default function MemberCardScreen() {
-  const { token } = useAuth();
+  const navigation = useNavigation();
+  const { user } = useAuth();
+
+  // 会員番号やゲストIDなど、QRコードの値を保持する
+  const [qrValue, setQrValue] = useState<string>('');
+
+  console.log(user);
+
+  // ログインしているかどうか判別するために利用
+  // （例：membershipNumber があれば「正式会員」とみなす、などアプリごとに調整可能）
+  const isLoggedIn = !!(user && user.membershipNumber);
+
+  useEffect(() => {
+    if (user) {
+      if (user.membershipNumber) {
+        setQrValue(user.membershipNumber);
+      } else if (user.guestId) {
+        setQrValue(user.guestId);
+      } else if (user.email) {
+        setQrValue(user.email);
+      } else {
+        setQrValue('NO VALUE');
+      }
+    }
+  }, [user]);
+
+  // 表示するユーザー名
+  const displayName = isLoggedIn
+    ? user?.name ?? 'No Name'
+    : 'Guest';
+
+  // ログイン時は空文字、未ログイン時は「Guest」にしています
+  const memberShipStatus = isLoggedIn
+    ? '' 
+    : 'Guest';
 
   return (
     <View style={styles.container}>
-      {token ? (
-        <>
-          <Text style={styles.title}>会員証</Text>
-          <Text style={styles.info}>[会員証の詳細情報]</Text>
-        </>
-      ) : (
-        <Text style={styles.message}>ログインしてください。会員証情報は表示されません。</Text>
+      {/* 画面上部のヘッダー（ユーザー名、ステータス） */}
+      <View style={styles.headerContainer}>
+        {/* 左上にユーザー名 or Guest */}
+        <Text style={styles.userName}>{displayName}</Text>
+        {/* ゴールドエリート部相当：未ログイン時のみ Guest と表示（今は空文字との切替）*/}
+        {!!memberShipStatus && (
+          <Text style={styles.memberShipStatus}>{memberShipStatus}</Text>
+        )}
+      </View>
+
+      {/* 中央に QR コードと小さめの会員番号 */}
+      <View style={styles.qrContainer}>
+        {qrValue ? (
+          <>
+            <QRCode 
+              value={qrValue} 
+              size={200}  // お好みで大きさ調整
+            />
+            {/* 会員番号を小さく表示したい場合はフォントサイズを小さめに */}
+            <Text style={styles.qrText}>{qrValue}</Text>
+          </>
+        ) : (
+          <Text style={styles.info}>QRコードの生成中...</Text>
+        )}
+      </View>
+
+      {/* 会員登録ボタン：ログイン済みの場合は非表示の例 */}
+      {!isLoggedIn && (
+        <TouchableOpacity
+          style={styles.userRegisterButton}
+          onPress={() => navigation.navigate('UserRegisterScreen')}
+        >
+          <Text style={styles.userRegisterButtonText}>新規会員登録</Text>
+        </TouchableOpacity>
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
-  title: { fontSize: 24, marginBottom: 20 },
-  info: { fontSize: 18, textAlign: 'center' },
-  message: { fontSize: 16, textAlign: 'center' },
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  headerContainer: {
+    // 上部余白や横の余白はお好みで
+    paddingTop: 24,
+    paddingHorizontal: 16,
+  },
+  userName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  memberShipStatus: {
+    marginTop: 4,
+    fontSize: 14,
+    color: '#666',
+  },
+  qrContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // 会員番号のテキストをかなり小さく表示
+  qrText: {
+    marginTop: 8,
+    fontSize: 12,
+    color: '#333',
+  },
+  userRegisterButton: {
+    marginBottom: 40,
+    alignSelf: 'center',
+    backgroundColor: '#007aff',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  userRegisterButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+  },
+  info: {
+    fontSize: 16,
+    color: '#999',
+    marginTop: 10,
+  },
 });

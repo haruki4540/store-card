@@ -1,59 +1,80 @@
-// src/api/auth.ts
+// src/api/apiClient.ts
 
-import Constants from "expo-constants";
-import { TEST_USERS } from "@/constants/testUsers";
+const API_URL = "https://api.example.com"; // ご利用の API のベースURLに合わせて変更
 
 /**
- * 認証用API
- * 
- * 指定されたメールアドレスとパスワードを使用してログイン処理を行う。
- * 成功時にはトークンを返却し、失敗時は例外をスローする。
- * 
- * @param email - ユーザーのメールアドレス
- * @param password - パスワード
- * @returns Promise<{ token: string }> - 成功時のJWTトークンを含むレスポンス
+ * API のエラーハンドリング用例外
  */
-export async function loginApi(email: string, password: string): Promise<{ token: string }> {
-  // Expo/React Native 環境であれば __DEV__ によって開発環境が判定される
-  const isDev = __DEV__;
-  // API_URL の設定。expoConfig の extra に apiUrl が設定されていなければデフォルトのURLを使用する
-  const API_URL = Constants.expoConfig?.extra?.apiUrl || "https://your-api-endpoint.com";
+export class ApiError extends Error {
+  public status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
 
-  // 開発環境の場合はモックデータで認証チェックを行う
-  if (isDev) {
-    // TEST_USERS 配列から該当するユーザーを検索
-    const user = TEST_USERS.find(
-      (u) => u.email === email && u.password === password
-    );
-    // 該当ユーザーが見つからなければエラーをスロー
-    if (!user) {
-      throw new Error("メールアドレスまたはパスワードが正しくありません");
-    }
-    // 見つかった場合はモックのトークンを返す
-    return Promise.resolve({ token: "mock-token-for-testing" });
+/**
+ * 汎用の API 呼び出し関数
+ * @param endpoint エンドポイント（例: "/api/auth/login"）
+ * @param options fetch のオプション（method, body など）
+ * @returns レスポンスの JSON データ（レスポンス型はジェネリクスで指定可能）
+ */
+export async function apiRequest<T = any>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const defaultOptions: RequestInit = {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+
+  // ヘッダーなどをマージ
+  const config: RequestInit = {
+    ...defaultOptions,
+    ...options,
+    headers: {
+      ...defaultOptions.headers,
+      ...(options.headers || {}),
+    },
+  };
+
+  const response = await fetch(`${API_URL}${endpoint}`, config);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new ApiError(data.message || "APIエラーが発生しました。", response.status);
   }
 
-  // 本番環境でのAPI通信を行う
-  try {
-    const response = await fetch(`${API_URL}/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      // リクエストボディにメールアドレスとパスワードをJSONで送信
-      body: JSON.stringify({ email, password }),
-    });
+  return data;
+}
 
-    // HTTPステータスが OK でない場合、エラーデータを取得しエラーをスローする
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "ログインに失敗しました");
-    }
+/**
+ * 個別の API 呼び出し例（ログイン）
+ * @param email メールアドレス
+ * @param password パスワード
+ * @returns API レスポンスデータ（例：JWT トークン等）
+ */
+export async function login(email: string, password: string) {
+  return apiRequest("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+}
 
-    // 正常時はレスポンスのJSONを返却する（トークンを含む）
-    return await response.json();
-  } catch (error) {
-    console.error("API通信エラー:", error);
-    throw error;
-  }
+// 他の API エンドポイントも同様に関数を定義することで、集約できる
+// 例：ユーザー登録
+export async function register(userData: {
+  name: string;
+  furigana: string;
+  birthDate: string;
+  phoneNumber: string;
+  email: string;
+  password: string;
+  gender: string | null;
+}) {
+  return apiRequest("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify(userData),
+  });
 }
