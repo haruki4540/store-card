@@ -8,6 +8,8 @@ import type { MainStackParamList } from "@/navigation/MainStackNavigator";
 import { loginApi } from "@/api/auth";
 import { useAuth } from "@/contexts/AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { setUpTests } from "react-native-reanimated";
+import { deleteGuestId } from '@/utils/guestStorage';
 
 /**
  * LoginScreen
@@ -19,6 +21,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { setToken } = useAuth();
+  const { setUser } = useAuth();
 
   const isValidEmail = email.includes('@') && email.includes('.');
   const isValidPassword = password.length >= 6;
@@ -32,11 +35,33 @@ export default function LoginScreen() {
     try {
       setLoading(true);
       const result = await loginApi(email, password);
-      console.log("LoginScreen: loginApi 結果", result);
+
+      // 保存時に現在のタイムスタンプを追加
+      const timestamp = new Date().toISOString();
+
+      // トークンとユーザー情報（タイムスタンプ付き）を保存する
       await AsyncStorage.setItem('auth_token', result.token);
-      console.log("LoginScreen: トークン保存完了", result.token);
       setToken(result.token);
-      navigation.goBack();
+
+      const userData = {
+        name: result.user.name,
+        email: result.user.email,
+        guestId: result.user.guestId,
+        membershipNumber: result.user.membership_number,
+        uniqueCode: result.user.unique_code,
+        lastUpdated: timestamp,
+      };
+      
+      await AsyncStorage.setItem('user_info', JSON.stringify(userData));
+      await deleteGuestId();
+      setUser(userData);
+
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'MainTabs' }],
+      });
+
+      Alert.alert("ログイン成功", "ようこそ！");
     } catch (error) {
       Alert.alert("ログイン失敗", "メールアドレスまたはパスワードが正しくありません");
       console.error("LoginScreen: ログインエラー", error);
