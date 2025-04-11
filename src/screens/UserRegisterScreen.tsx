@@ -1,4 +1,11 @@
-// src/screens/UserRegisterScreen.tsx
+/**
+ * UserRegisterScreen.tsx
+ *
+ * 会員登録を行う画面。
+ * - 氏名・ふりがな・生年月日・電話番号・性別・メールアドレス・パスワードなどを入力する
+ * - 入力内容をバリデーションし、登録APIへリクエストを送信する
+ * - 登録完了後は確認メール送信完了画面へ遷移する
+ */
 
 import React, { useState } from 'react';
 import {
@@ -16,15 +23,14 @@ import { userRegister } from '@/api/apiClient';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
 import { deleteGuestId } from '@/utils/guestStorage';
+import { MainStackParamList } from '@/navigation/MainStackNavigator';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-/**
- * UserRegisterScreen コンポーネント
- * 会員登録フォーム画面を提供する。
- * 氏名、ふりがな、生年月日、電話番号、性別、メールアドレス、パスワードなどを入力可能。
- * 生年月日は DateTimePicker を使用し、Expo Go での実行にも対応。
- */
+// ナビゲーションの型定義
+type NavigationProp = NativeStackNavigationProp<MainStackParamList, 'EmailSentScreen'>;
+
 export default function UserRegisterScreen() {
-  // 各フォーム入力値の状態管理
+  // 入力値の状態を管理する
   const [name, setName] = useState('');
   const [furigana, setFurigana] = useState('');
   const [birthDate, setBirthDate] = useState<Date>(new Date(1990, 0, 1));
@@ -33,26 +39,22 @@ export default function UserRegisterScreen() {
   const [confirmEmail, setConfirmEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [gender, setGender] = useState<number  | null>(null);
+  const [gender, setGender] = useState<number | null>(null);
   const [openDatePicker, setOpenDatePicker] = useState(false);
-  const navigation = useNavigation();
+
+  const navigation = useNavigation<NavigationProp>();
   const { user } = useAuth();
-  const membershipNumber = user.guestId
-  
+  const membershipNumber = user?.guestId;
 
   /**
-   * 確認ボタン押下時の処理。
-   * 必須入力項目の簡易チェックを行い、未入力があればアラート表示。
+   * 会員登録ボタン押下時の処理。
+   * バリデーション後にAPIへ登録リクエストを送信し、確認メール画面へ遷移する
    */
-// src/screens/UserRegisterScreen.tsx の handleConfirm を以下のように更新
-
-const handleConfirm = async () => {
-    // 必須項目のチェック
-    if (!name || !furigana || !phoneNumber || !email || !password) {
+  const handleConfirm = async () => {
+    if (!name || !furigana || !phoneNumber || !email || !password || !gender || !membershipNumber) {
       Alert.alert('エラー', '必須項目を入力してください。');
       return;
     }
-    // メールアドレス（確認用）とパスワード（確認用）の整合性チェック
     if (email !== confirmEmail) {
       Alert.alert('エラー', 'メールアドレスが一致しません。');
       return;
@@ -61,15 +63,13 @@ const handleConfirm = async () => {
       Alert.alert('エラー', 'パスワードが一致しません。');
       return;
     }
-    // パスワードの最低文字数（例：8文字以上）のチェック（必要に応じて）
     if (password.length < 8) {
       Alert.alert('エラー', 'パスワードは8文字以上で入力してください。');
       return;
     }
-  
-    // ユーザー情報を1つのオブジェクトにまとめる（生年月日は ISO 文字列へ変換）
-    const payload = {
-      user: {
+
+    try {
+      await userRegister({
         name,
         furigana,
         birthDate: birthDate.toISOString(),
@@ -77,22 +77,25 @@ const handleConfirm = async () => {
         email,
         password,
         gender,
-        membershipNumber
-      }
-    };
-  
-    try {
-      await userRegister(payload);
+        membershipNumber,
+      });
+
       await deleteGuestId();
-      navigation.navigate('EmailSentScreen', { message: '確認メールを送信しました。\nメールをご確認ください。' });
-    } catch (error) {
-      Alert.alert('エラー', error.message || '登録に失敗しました。');
-      console.error('UserRegisterScreen: ユーザー登録エラー', error);
+
+      navigation.navigate('EmailSentScreen', {
+        message: '確認メールを送信しました。\nメールをご確認ください。',
+      });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        Alert.alert('エラー', error.message || '登録に失敗しました。');
+      } else {
+        Alert.alert('エラー', '予期しないエラーが発生しました。');
+      }
     }
   };
 
   /**
-   * 生年月日を "YYYY年 M月 D日" 形式にフォーマットして返す関数
+   * 生年月日を「YYYY年 M月 D日」形式で表示する
    */
   const formatBirthDate = (date: Date) => {
     if (!date) return '';
@@ -101,12 +104,12 @@ const handleConfirm = async () => {
 
   return (
     <View style={styles.container}>
-      {/* ヘッダーエリア */}
+      {/* ヘッダー */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>新規会員登録</Text>
       </View>
 
-      {/* ステップバー表示 */}
+      {/* ステップ表示 */}
       <View style={styles.stepContainer}>
         <View style={[styles.stepItem, styles.activeStep]}>
           <Text style={styles.stepItemText}>お客様情報</Text>
@@ -119,34 +122,34 @@ const handleConfirm = async () => {
         </View>
       </View>
 
-      {/* 入力フォームエリア */}
+      {/* 入力フォーム */}
       <ScrollView style={styles.formContainer}>
-        {/* 氏名入力 */}
+        {/* 氏名 */}
         <View style={styles.formGroup}>
           <Text style={styles.formLabel}>氏名 <Text style={styles.required}>必須</Text></Text>
           <TextInput
             style={styles.input}
-            placeholder="例）鈴木　太郎"
+            placeholder="例）鈴木 太郎"
             value={name}
             onChangeText={setName}
           />
         </View>
 
-        {/* ふりがな入力 */}
+        {/* ふりがな */}
         <View style={styles.formGroup}>
           <Text style={styles.formLabel}>ふりがな <Text style={styles.required}>必須</Text></Text>
           <TextInput
             style={styles.input}
-            placeholder="例）すずき　たろう"
+            placeholder="例）すずき たろう"
             value={furigana}
             onChangeText={setFurigana}
           />
         </View>
 
-        {/* 生年月日：DateTimePickerを使用 */}
+        {/* 生年月日 */}
         <View style={styles.formGroup}>
           <Text style={styles.formLabel}>
-            生年月日（バースデークーポンが届きます） <Text style={styles.optional}>※変更不可</Text>
+            生年月日 <Text style={styles.optional}>（変更不可）</Text>
           </Text>
           <TouchableOpacity
             style={[styles.input, { justifyContent: 'center' }]}
@@ -167,10 +170,10 @@ const handleConfirm = async () => {
           )}
         </View>
 
-        {/* 電話番号入力 */}
+        {/* 電話番号 */}
         <View style={styles.formGroup}>
           <Text style={styles.formLabel}>電話番号 <Text style={styles.required}>必須</Text></Text>
-          <Text style={styles.note}>ハイフン「-」なしで入力</Text>
+          <Text style={styles.note}>※ハイフン「-」なしで入力</Text>
           <TextInput
             style={styles.input}
             placeholder="例）09012345678"
@@ -180,33 +183,24 @@ const handleConfirm = async () => {
           />
         </View>
 
-        {/* 性別選択 */}
+        {/* 性別 */}
         <View style={styles.formGroup}>
           <Text style={styles.formLabel}>性別 <Text style={styles.required}>必須</Text></Text>
           <View style={styles.genderContainer}>
             <TouchableOpacity
-              style={[
-                styles.genderButton,
-                gender === 1 && styles.genderButtonSelected, // 女性の場合
-              ]}
+              style={[styles.genderButton, gender === 1 && styles.genderButtonSelected]}
               onPress={() => setGender(1)}
             >
               <Text style={styles.genderButtonText}>女性</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[
-                styles.genderButton,
-                gender === 2 && styles.genderButtonSelected, // 男性の場合
-              ]}
+              style={[styles.genderButton, gender === 2 && styles.genderButtonSelected]}
               onPress={() => setGender(2)}
             >
               <Text style={styles.genderButtonText}>男性</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[
-                styles.genderButton,
-                gender === 3 && styles.genderButtonSelected, // 未選択の場合
-              ]}
+              style={[styles.genderButton, gender === 3 && styles.genderButtonSelected]}
               onPress={() => setGender(3)}
             >
               <Text style={styles.genderButtonText}>未選択</Text>
@@ -214,7 +208,7 @@ const handleConfirm = async () => {
           </View>
         </View>
 
-        {/* メールアドレス入力 */}
+        {/* メールアドレス */}
         <View style={styles.formGroup}>
           <Text style={styles.formLabel}>メールアドレス <Text style={styles.required}>必須</Text></Text>
           <TextInput
@@ -227,22 +221,20 @@ const handleConfirm = async () => {
           />
         </View>
 
-        {/* メール確認用 */}
+        {/* メールアドレス確認 */}
         <View style={styles.formGroup}>
           <Text style={styles.formLabel}>メールアドレス（確認用） <Text style={styles.required}>必須</Text></Text>
           <TextInput
             style={styles.input}
-            placeholder="確認のため再度ご入力ください"
+            placeholder="再度ご入力ください"
             keyboardType="email-address"
             autoCapitalize="none"
             value={confirmEmail}
             onChangeText={setConfirmEmail}
           />
-          <Text style={styles.note}>
-          </Text>
         </View>
 
-        {/* パスワード入力 */}
+        {/* パスワード */}
         <View style={styles.formGroup}>
           <Text style={styles.formLabel}>パスワード <Text style={styles.required}>必須</Text></Text>
           <Text style={styles.note}>※半角英数8文字以上</Text>
@@ -255,7 +247,7 @@ const handleConfirm = async () => {
           />
         </View>
 
-        {/* パスワード（確認用） */}
+        {/* パスワード確認 */}
         <View style={styles.formGroup}>
           <Text style={styles.formLabel}>パスワード（確認用） <Text style={styles.required}>必須</Text></Text>
           <TextInput
@@ -273,7 +265,7 @@ const handleConfirm = async () => {
         </TouchableOpacity>
 
         {/* ホームに戻るボタン */}
-        <TouchableOpacity style={styles.backHomeButton} onPress={() => navigation.goBack() }>
+        <TouchableOpacity style={styles.backHomeButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backHomeButtonText}>ホームに戻る</Text>
         </TouchableOpacity>
       </ScrollView>

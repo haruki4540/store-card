@@ -1,25 +1,43 @@
-// src/screens/EmailSentScreen.tsx
+/**
+ * EmailSentScreen.tsx
+ *
+ * 確認メールの送信完了をユーザーに伝える画面。
+ * - ユーザー登録後などに表示される
+ * - 表示するメッセージは前の画面から受け取る
+ * - 「ホームに戻る」ボタンを押すと、MainTabsに遷移する
+ */
+
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MainStackParamList } from '@/navigation/MainStackNavigator';
+
+// ナビゲーションとルートの型定義
+type NavigationProp = NativeStackNavigationProp<MainStackParamList, 'EmailSentScreen'>;
+type EmailSentScreenRouteProp = RouteProp<MainStackParamList, 'EmailSentScreen'>;
 
 export default function EmailSentScreen() {
-  const navigation = useNavigation();
-  const route = useRoute();
-  // 画面遷移時に送られたメッセージを取得
-  const { message } = route.params as { message: string };
+  // ナビゲーション機能とルートパラメータを取得
+  const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<EmailSentScreenRouteProp>();
+
+  // 前の画面から受け取ったメッセージを表示する
+  const { message } = route.params;
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>メール送信完了</Text>
       <Text style={styles.message}>{message}</Text>
+
+      {/* ホームに戻るボタン */}
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'MainTabs' }],
-            });
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'MainTabs' }],
+          });
         }}
       >
         <Text style={styles.buttonText}>ホームに戻る</Text>
@@ -28,6 +46,7 @@ export default function EmailSentScreen() {
   );
 }
 
+// スタイル定義
 const styles = StyleSheet.create({
   container: {
     flex: 1,
