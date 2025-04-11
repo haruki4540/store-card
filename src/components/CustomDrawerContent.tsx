@@ -1,4 +1,10 @@
-// src/components/CustomDrawerContent.tsx
+/**
+ * CustomDrawerContent.tsx
+ *
+ * アプリのドロワーメニュー表示を担当するコンポーネント。
+ * - 認証状態に応じて表示項目を切り替える（ログイン／ログアウト）
+ * - 会員証情報などは専用タブで別途表示するため、このメニューでは省略
+ */
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
@@ -7,49 +13,47 @@ import { useAuth } from '@/contexts/AuthContext';
 import { removeToken } from '@/utils/authToken';
 import { removeUser } from '@/utils/userStorage';
 
-/**
- * CustomDrawerContent コンポーネント
- * ドロワーメニュー内に認証状態に応じたメニュー項目を表示する。
- * ログインしていないときは「ログイン」ボタンのみ、ログイン済みの場合は「ログアウト」ボタンを表示する。
- * 会員証情報は下段タブの「会員証」ページ内で表示する。
- */
 export default function CustomDrawerContent(props: any) {
   const { token, refetchToken } = useAuth();
 
-  // ログアウト処理
+  /**
+   * handleLogout
+   * ログアウト時に呼び出される処理。
+   * トークンとユーザー情報を削除し、認証状態をリフレッシュする。
+   */
   const handleLogout = async () => {
     try {
       await removeToken();
       await removeUser();
       await refetchToken();
-      
-      // 必要に応じてメッセージ表示など
     } catch (error) {
-      console.error("ログアウトエラー", error);
+      console.error('CustomDrawerContent: ログアウトエラー', error);
     }
   };
 
   return (
     <DrawerContentScrollView {...props}>
+      {/* ドロワーヘッダー */}
       <View style={styles.header}>
         <Text style={styles.title}>メニュー</Text>
       </View>
+
+      {/* 認証状態に応じてログイン or ログアウトを表示 */}
       {token ? (
-        // ログイン済みの場合はログアウトボタンのみ表示
-        <DrawerItem 
-          label="ログアウト" 
-          onPress={handleLogout} 
+        <DrawerItem
+          label="ログアウト"
+          onPress={handleLogout}
           labelStyle={styles.drawerLabel}
         />
       ) : (
-        // 未ログインの場合はログインボタンのみ表示
-        <DrawerItem 
-        label="ログイン" 
-        onPress={() => props.navigation.navigate('Main', { screen: 'Login' })} 
-        labelStyle={styles.drawerLabel}
+        <DrawerItem
+          label="ログイン"
+          onPress={() => props.navigation.navigate('Main', { screen: 'Login' })}
+          labelStyle={styles.drawerLabel}
         />
       )}
-      {/* ここに共通メニュー項目を追加することも可能 */}
+
+      {/* 追加のメニュー項目がある場合はここに追加 */}
     </DrawerContentScrollView>
   );
 }

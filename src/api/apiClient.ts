@@ -1,13 +1,25 @@
-// src/api/apiClient.ts
+/**
+ * apiClient.ts
+ *
+ * アプリ全体で使用する API 通信ユーティリティを提供するモジュール。
+ * - 共通の API 呼び出し処理（fetch ラッパー）
+ * - サーバー側からのエラーをカスタム例外として扱う
+ * - 特定エンドポイント用の関数（例：ユーザー登録）もここに記載
+ */
+
 import Constants from "expo-constants";
 
-const API_URL = Constants.expoConfig?.extra?.apiUrl || "http://192.168.2.231:3000";
+// APIのベースURLを取得（環境変数 or デフォルト）
+const API_URL =
+  Constants.expoConfig?.extra?.apiUrl || "http://192.168.2.231:3000";
 
 /**
- * API のエラーハンドリング用例外
+ * ApiError
+ * サーバーから返されたエラー情報を扱うためのカスタム例外クラス。
  */
 export class ApiError extends Error {
   public status: number;
+
   constructor(message: string, status: number) {
     super(message);
     this.status = status;
@@ -15,11 +27,14 @@ export class ApiError extends Error {
 }
 
 /**
- * API呼び出し用のユーティリティ関数
- * @param endpoint エンドポイント（例: "/api/auth/login"）
- * @param method HTTPメソッド。デフォルトは "GET"。
- * @param data POSTやPUTの場合に送信するデータ
- * @returns APIから返却されたJSONレスポンス
+ * apiCall
+ * 共通の API 呼び出し関数。
+ *
+ * @param endpoint - 呼び出す API のエンドポイント（例：/api/users）
+ * @param method - HTTPメソッド（GET, POST など）
+ * @param data - POST/PUT 時に送信するデータ（省略可）
+ * @returns API の JSON レスポンス
+ * @throws サーバーエラー時は ApiError をスロー
  */
 export async function apiCall(
   endpoint: string,
@@ -28,18 +43,13 @@ export async function apiCall(
 ): Promise<any> {
   const url = `${API_URL}${endpoint}`;
 
-  // 共通のヘッダー設定
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-  };
-
-  // fetch設定
   const options: RequestInit = {
     method,
-    headers,
+    headers: {
+      'Content-Type': 'application/json',
+    },
   };
 
-  // POST/PUTの場合、bodyにJSON文字列を設定
   if (data) {
     options.body = JSON.stringify(data);
   }
@@ -49,20 +59,22 @@ export async function apiCall(
     const json = await response.json();
 
     if (!response.ok) {
-      // エラーの場合はサーバー側のメッセージを含め例外をスロー
       throw new ApiError(json.message || 'APIエラーが発生しました。', response.status);
     }
 
     return json;
   } catch (error) {
-    // エラーログの出力や再スローなど、必要に応じたエラーハンドリング
+    console.error('apiCall: 通信エラー', error);
     throw error;
   }
 }
 
 /**
- * ユーザー登録用の関数
- * ユーザー情報を /api/auth/register エンドポイントへPOSTします
+ * userRegister
+ * ユーザー登録用の API を呼び出す。
+ *
+ * @param userData - 登録時に送信するユーザー情報
+ * @returns サーバーからのレスポンス
  */
 export async function userRegister(userData: {
   name: string;

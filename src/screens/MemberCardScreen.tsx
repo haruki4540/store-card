@@ -1,24 +1,37 @@
-// src/screens/MemberCardScreen.tsx
+/**
+ * MemberCardScreen.tsx
+ *
+ * 会員証を表示する画面。
+ * - 会員の場合は「会員番号」をQRコードとして表示
+ * - ゲストの場合は「ゲストID」や「メールアドレス」などをQRコード化
+ * - ゲストには「新規会員登録」ボタンを表示
+ * 
+ * ユーザー情報はグローバル（Context）から取得し、
+ * 状況に応じて表示内容を切り替える。
+ */
 
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import QRCode from 'react-native-qrcode-svg';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MainStackParamList } from '@/navigation/MainStackNavigator';
 
 export default function MemberCardScreen() {
-  const navigation = useNavigation();
+  // 型付きナビゲーションを取得
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
+
+  // Contextからユーザー情報を取得
   const { user } = useAuth();
 
-  // 会員番号やゲストIDなど、QRコードの値を保持する
+  // QRコードの内容を保持
   const [qrValue, setQrValue] = useState<string>('');
 
-  console.log(user);
-
-  // ログインしているかどうか判別するために利用
-  // （例：membershipNumber があれば「正式会員」とみなす、などアプリごとに調整可能）
+  // 会員かどうかを判定（会員番号があるかどうか）
   const isLoggedIn = !!(user && user.membershipNumber);
 
+  // QRコードに表示する値を決定
   useEffect(() => {
     if (user) {
       if (user.membershipNumber) {
@@ -38,32 +51,24 @@ export default function MemberCardScreen() {
     ? user?.name ?? 'No Name'
     : 'Guest';
 
-  // ログイン時は空文字、未ログイン時は「Guest」にしています
-  const memberShipStatus = isLoggedIn
-    ? '' 
-    : 'Guest';
+  // ゲスト時の表示ラベル（空 or "Guest"）
+  const memberShipStatus = isLoggedIn ? '' : 'Guest';
 
   return (
     <View style={styles.container}>
-      {/* 画面上部のヘッダー（ユーザー名、ステータス） */}
+      {/* ユーザー名とステータスの表示エリア */}
       <View style={styles.headerContainer}>
-        {/* 左上にユーザー名 or Guest */}
         <Text style={styles.userName}>{displayName}</Text>
-        {/* ゴールドエリート部相当：未ログイン時のみ Guest と表示（今は空文字との切替）*/}
         {!!memberShipStatus && (
           <Text style={styles.memberShipStatus}>{memberShipStatus}</Text>
         )}
       </View>
 
-      {/* 中央に QR コードと小さめの会員番号 */}
+      {/* QRコードとその下の識別子を表示 */}
       <View style={styles.qrContainer}>
         {qrValue ? (
           <>
-            <QRCode 
-              value={qrValue} 
-              size={200}  // お好みで大きさ調整
-            />
-            {/* 会員番号を小さく表示したい場合はフォントサイズを小さめに */}
+            <QRCode value={qrValue} size={200} />
             <Text style={styles.qrText}>{qrValue}</Text>
           </>
         ) : (
@@ -71,7 +76,7 @@ export default function MemberCardScreen() {
         )}
       </View>
 
-      {/* 会員登録ボタン：ログイン済みの場合は非表示の例 */}
+      {/* ゲストユーザーにのみ表示する会員登録ボタン */}
       {!isLoggedIn && (
         <TouchableOpacity
           style={styles.userRegisterButton}
@@ -84,13 +89,13 @@ export default function MemberCardScreen() {
   );
 }
 
+// スタイル定義
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
   },
   headerContainer: {
-    // 上部余白や横の余白はお好みで
     paddingTop: 24,
     paddingHorizontal: 16,
   },
@@ -109,7 +114,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // 会員番号のテキストをかなり小さく表示
   qrText: {
     marginTop: 8,
     fontSize: 12,

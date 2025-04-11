@@ -1,142 +1,176 @@
 # Store Card Mobile App
 
-Store Card Mobile App は、Expo/React Native を用いて構築されたスマホ向けアプリです。  
-このアプリは、ユーザー認証、会員証情報の表示、下段タブナビゲーション、およびドロワーメニュー（右側からスライドして表示）を備えています。
-
-## 目次
-- 特徴
-- 技術スタック
-- ディレクトリ構成
-- 機能概要
-  - 認証機能と状態管理
-  - ナビゲーション構成
-  - レスポンシブな UI
-- セットアップ & インストール
-- 実行方法
-- 開発の流れ
-- トラブルシュート
-- 今後の展望
-
-## 特徴
-- **認証機能**  
-  ユーザーがログインすると、JWT などの認証トークンを取得し、AsyncStorage と AuthContext でグローバルに管理します。
-- **ナビゲーション**  
-  ・**Drawer Navigator**  
-    右側からスライドして表示されるドロワーメニュー。認証状態に応じ「ログイン」または「ログアウト」ボタンが表示される。  
-  ・**Stack Navigator**  
-    ドロワー内で MainTabs（下段タブ）、Login、Settings を管理。  
-  ・**Bottom Tab Navigator**  
-    下段に「ホーム」「クーポン」「会員証」「店舗案内」「ニュース」のタブを表示。  
-- **レスポンシブ UI**  
-  SafeAreaProvider と Flexbox レイアウトにより、各端末で適切に表示されます。
-
-## 技術スタック
-- React Native / Expo
-- React Navigation (Drawer, Stack, Tab)
-- TypeScript
-- AsyncStorage
-- react-native-safe-area-context
-- @expo/vector-icons
-
-## ディレクトリ構成例
-```
-/src
-  /components
-    HeaderMenu.tsx
-    CustomDrawerContent.tsx
-  /contexts
-    AuthContext.tsx
-  /navigation
-    AppNavigator.tsx
-    MainStackNavigator.tsx
-    RootDrawerNavigator.tsx
-    BottomTabNavigator.tsx
-  /screens
-    HomeScreen.tsx
-    LoginScreen.tsx
-    MemberCardScreen.tsx
-    SettingsScreen.tsx
-  /utils
-    authToken.ts
-  /constants
-    testUsers.ts
-App.tsx
-```
-
-## 機能概要
-
-### 認証機能と状態管理
-1. **ログイン処理の流れ:**
-   - LoginScreen でメールアドレスとパスワードを入力（バリデーションあり）。
-   - 正常なら `loginApi` を呼び出し、認証トークンを取得。
-   - 取得したトークンは AsyncStorage に保存され、AuthContext の `setToken` でグローバルに状態更新。
-   - 各画面は AuthContext を使って認証状態を監視し、UI を切り替える。
-
-2. **AuthContext の仕組み:**
-   - AuthContext で token, loading, setToken, refetchToken を管理。
-   - プロジェクト全体で状態を共有し、変更があると各画面が再レンダリング。
-
-### ナビゲーション構成
-- **Drawer Navigator (RootDrawerNavigator):**  
-  右側からスライドし、CustomDrawerContent により認証状態に応じた「ログイン」または「ログアウト」ボタンが表示される。
-- **Stack Navigator (MainStackNavigator):**  
-  Drawer 内にあり、MainTabs（BottomTabNavigator）、Login、Settings を管理。Header に HeaderMenu を配置。
-- **Bottom Tab Navigator (BottomTabNavigator):**  
-  下段に「ホーム」「クーポン」「会員証」「店舗案内」「ニュース」のタブを表示。
-
-### レスポンシブな UI
-- SafeAreaProvider/SafeAreaView により、各端末の安全領域に対応。
-- Flexbox レイアウトで各画面の余白やパディングを調整。
-
-## セットアップ & インストール
-
-### 前提条件
-- Node.js と npm (または yarn)
-- Expo CLI (`npm install -g expo-cli` または `yarn global add expo-cli`)
-
-### インストール
-```bash
-git clone https://your-repo-url.git
-cd your-project-folder
-npm install
-# または yarn install
-```
-
-## 実行方法
-
-Expo を利用して、以下のコマンドで起動します。
-```bash
-expo start
-```
-Expo Go アプリから QR コードで実機テストが可能です。
-
-## 開発の流れ
-
-1. **認証機能実装:**  
-   LoginScreen で API 呼び出し、トークン保存、AuthContext によるグローバル状態更新を実装。
-2. **ナビゲーション実装:**  
-   DrawerNavigator, MainStackNavigator, BottomTabNavigator を組み合わせ、各画面とモーダル（Login, Settings）を管理。
-3. **UI/レスポンシブ設計:**  
-   SafeAreaProvider と Flexbox を利用し、各端末で見やすいレイアウトに調整。
-4. **デバッグ & テスト:**  
-   コンソールログ、Expo のデバッガー、実機テストなどで機能を確認。
-
-## トラブルシュート
-
-- **型エラーやパスのエラー:**  
-  tsconfig.json の paths 設定を確認し、必要に応じてキャッシュクリアまたはエディタの再起動を行う。
-- **ナビゲーションの不具合:**  
-  ネストされたナビゲーションの型定義や navigate() の呼び出し方を再確認する。
-- **認証状態が更新されない:**  
-  LoginScreen の API 呼び出し、AsyncStorage 保存、setToken() の処理とログ出力を確認する。
-
-## 今後の展望
-
-- バックエンド API の連携
-- UI/UX のさらなる改善（外部 UI ライブラリの導入）
-- 自動テストと CI/CD の構築
+Store Card Mobile App は、Expo と React Native を用いて開発された スマートフォン向けの実用アプリです。
+ユーザーの登録やログインなどの認証機能を始め、会員証QRコード表示や、店舗検索、クーポン表示など、ストアアプリに必要な基本機能を描いています。
 
 ---
 
-以上が、フロントエンド実装の技術的な詳細を盛り込んだ README サンプルです。  
-この内容を Notion や README.md としてコピー＆ペーストすれば、プロジェクトメンバーや新規参加者にとって分かりやすい技術ドキュメントとなります。
+## 目次
+- 本アプリの目的
+- 技術スタック
+- ディレクトリ構成
+- 機能概要
+- コーディングルール
+- 環境構築
+- 実行方法
+- 添加方法 (機能を増やす際)
+- デバッグ・トラブルシュート
+
+---
+
+### 本アプリの目的
+- 店舗ユーザーの会員登録
+- QRコードを用いた会員証表示
+- 店舗検索やお気に入り登録
+- 給付クーポン表示
+
+---
+
+## 技術スタック
+
+- **React Native + Expo**: スマホアプリ開発用のフレームワーク
+- **TypeScript**: 型セーフな開発
+- **React Navigation**: Stack, BottomTab, Drawer のネスト管理
+- **AsyncStorage**: トークンやユーザー情報の保存
+- **SafeAreaProvider**: レイアウト管理
+- **nanoid**: guestId (仮ユーザーID)の発行
+
+---
+
+## ディレクトリ構成
+
+```
+/src
+  /components         組み込み用 UI パーツ
+  /contexts           AuthContext (認証情報を共有)
+  /navigation         各ナビゲーションの構築
+  /screens            一覧の画面コンポーネント
+  /utils              AsyncStorage のラッパー/トークン関連
+  /api                API通信の共通処理
+App.tsx               全体ラップ
+App.js                Expo用エントリーポイント
+```
+
+---
+
+## 機能概要
+
+### 1. 認証機能
+- **LoginScreen**
+  - メールアドレスとパスワードを入力
+  - loginApi を呼び出し、トークンを取得
+  - AsyncStorage と AuthContext に保存
+
+- **AuthContext.tsx**
+  - 起動時に AsyncStorage から情報を復元
+  - トークン, user, loading を Context で共有
+
+- **guestId**
+  - 未ログインユーザーの場合、自動生成
+
+
+### 2. ナビゲーション
+- **RootDrawerNavigator**
+  - 右側スライドの Drawer
+  - CustomDrawerContent でメニュー切り替え
+
+- **MainStackNavigator**
+  - Login, Settings, Home, UserRegisterScreen, EmailSentScreen
+  - headerRight に HeaderMenu を追加
+
+- **BottomTabNavigator**
+  - HomeTab, CouponTab, MemberCardTab, StoreInfoTab, NewsTab
+  - MaterialIcons を使用
+
+
+### 3. ダミー画面
+
+- HomeScreen.tsx: 簡易なようこそメッセージ
+- MemberCardScreen.tsx: 会員証QR表示
+- StoreScreen.tsx: 店舗検索とお気に入り切り替え
+- EmailSentScreen.tsx: メール確認給付メッセージ
+- UserRegisterScreen.tsx: 必須項目入力フォーム + 登録API
+
+---
+
+## コーディングルール
+
+- このプロジェクトでは、**第三者でもわかりやすい読みやすいコード**を目指しています
+
+### 言文等
+- TypeScript を使用 (型定義や補完性を保証)
+- 文本は **「~する」言語で統一**
+- はじめにファイル範囲について **doc comment で概要を説明**
+- 部分注釈もすべて「// この処理は...」として分かりやすく表示
+
+
+### 呼び出し方法
+- Navigation は必ず型指定
+  - `useNavigation<NativeStackNavigationProp<MainStackParamList>>()`
+- `useRoute()` も型指定必須
+- 入力値は useState で管理
+- API呼び出しは `apiCall` を使用
+
+---
+
+## 環境構築
+
+### 前提
+- Node.js
+- npm / yarn
+- Expo CLI:
+```bash
+npm install -g expo-cli
+# または
+yarn global add expo-cli
+```
+
+### インストール
+```bash
+git clone https://github.com/your-user/store-card-mobile-app.git
+cd store-card-mobile-app
+npm install
+# または
+yarn install
+```
+
+---
+
+## 実行方法
+
+```bash
+expo start
+```
+上記で localhost:19000 が立ち上がります。
+Expo Go アプリでスマホで試したり、iOS/Android エミュレータで開発が可能です。
+
+---
+
+## 機能追加手順
+
+新しい画面(タブ/スタック)や機能を追加するには、以下の手順に従う
+
+### 1. 画面追加
+- `/screens` 配下に .tsx ファイルを作成
+- `MainStackNavigator.tsx` または `BottomTabNavigator.tsx` に route 追加
+
+### 2. API連携
+- `/api` 配下に apiCall を使ったメソッドを追加
+- `/screens/YourScreen.tsx` で呼び出し
+
+### 3. 情報保存
+- AsyncStorage の操作は `/utils/authToken.ts` または `/utils/userStorage.ts` を使用
+
+---
+
+## デバッグ/トラブルシュート
+
+- TypeScriptで型エラー:
+  - tsconfig.json の `paths` 設定の確認
+  - VSCode キャッシュクリア & リロード
+
+- AsyncStorage が保存されない:
+  - Expoの機能制限やパーミッションチェック
+
+- navigate でパラメータが通らない:
+  - MainStackParamList の型に対した props を見直す

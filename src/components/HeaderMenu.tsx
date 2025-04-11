@@ -1,4 +1,9 @@
-// src/components/HeaderMenu.tsx
+/**
+ * HeaderMenu.tsx
+ *
+ * 画面右上に表示されるメニューアイコン（ハンバーガーボタン）。
+ * - 押下すると親のドロワーナビゲーターを開閉する
+ */
 
 import React from 'react';
 import { TouchableOpacity, StyleSheet, Text } from 'react-native';
@@ -11,7 +16,10 @@ type NavigationProp = DrawerNavigationProp<DrawerParamList>;
 export default function HeaderMenu() {
   const navigation = useNavigation<NavigationProp>();
 
-  // 親ドロワーに対してトグルアクションをディスパッチ
+  /**
+   * openDrawer
+   * 親ナビゲーターのドロワーをトグル（開閉）する。
+   */
   const openDrawer = () => {
     navigation.getParent()?.dispatch(DrawerActions.toggleDrawer());
   };
@@ -28,6 +36,6 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   text: {
-    fontSize: 40,
+    fontSize: 32,
   },
 });

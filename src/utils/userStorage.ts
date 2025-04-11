@@ -1,12 +1,21 @@
+/**
+ * userStorage.ts
+ *
+ * ユーザー情報（ログイン済みの会員データなど）を
+ * 永続ストレージ（AsyncStorage）に保存・取得・削除するユーティリティ。
+ */
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const USER_KEY = 'user_info';
 
 /**
  * saveUser
- * サーバーから受け取ったユーザー情報を保存する
+ * ユーザー情報を保存する。
+ *
+ * @param user - 保存するユーザーオブジェクト
  */
-export const saveUser = async (user: any) => {
+export const saveUser = async (user: any): Promise<void> => {
   try {
     await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
   } catch (err) {
@@ -16,7 +25,9 @@ export const saveUser = async (user: any) => {
 
 /**
  * getUser
- * 保存されたユーザー情報を取得する
+ * 保存されているユーザー情報を取得する。
+ *
+ * @returns ユーザーオブジェクト、または存在しない場合は null
  */
 export const getUser = async (): Promise<any | null> => {
   try {
@@ -30,9 +41,11 @@ export const getUser = async (): Promise<any | null> => {
 
 /**
  * removeUser
- * ログアウト時にユーザー情報を削除する
+ * 保存されているユーザー情報を削除する。
+ *
+ * ログアウトやアカウント切り替え時などに使用。
  */
-export const removeUser = async () => {
+export const removeUser = async (): Promise<void> => {
   try {
     await AsyncStorage.removeItem(USER_KEY);
   } catch (err) {
@@ -40,4 +53,3 @@ export const removeUser = async () => {
     throw err;
   }
 };
-
